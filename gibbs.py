@@ -1,5 +1,7 @@
 """gibbs sampling motif finder"""
 import numpy as np
+from motif_ops import build_pfm, build_pwm
+from seq_ops import get_seq, reverse_complement
 
 """
 GibbsMotifFinder(DNA, k-length)
@@ -15,10 +17,77 @@ GibbsMotifFinder(DNA, k-length)
 also looking for promoter sequences? has CDS designation and TATA box, forward or reverse strand
 """
 
-def score_kmer():
-      """score kmer, take out of log2 space with np.exp2, then add to scores list"""
+def gibbs_motif_finder(DNA, k, max_iter=10000):
+    N = len(DNA)  # Number of DNA sequences
+    motifs = [random_kmer(seq, k) for seq in DNA]  # Random initial motifs
 
+    for _ in range(max_iter):
+        i = random.randint(0, N - 1)  # Randomly select one sequence
+        excluded_motifs = [motif for j, motif in enumerate(motifs) if j != i]
+        
+        # Build PWM from motifs except the one in sequence i
+        pwm = build_pwm(excluded_motifs, k)
+        
+        # Select a new motif probabilistically for sequence i
+        new_motif = select_kmer_probabilistically(DNA[i], pwm, k)
+        
+        # Update the motif for sequence i
+        motifs[i] = new_motif
 
+    # Convert final motifs into a Position Frequency Matrix (PFM)
+    return build_pfm(motifs, k)
+
+def random_kmer(sequence, k):
+    """Pick a random k-mer from the sequence."""
+    start = random.randint(0, len(sequence) - k)
+    return sequence[start:start + k]
+
+def select_kmer_probabilistically(sequence, pwm, k):
+    """Select a k-mer probabilistically based on PWM scores."""
+    scores = []
+    nuc_index = {'A': 0, 'C': 1, 'G': 2, 'T': 3}
+    for i in range(len(sequence) - k + 1):
+        kmer = sequence[i:i + k]
+        score = 1
+        for pos, nucleotide in enumerate(kmer):
+            score *= pwm[nuc_index[nucleotide], pos]  # Multiply probabilities
+        scores.append(score)
+    
+    # Normalize scores to get probabilities
+    probs = [score / sum(scores) for score in scores]
+    
+    # Select a k-mer based on the probability distribution
+    return random.choices([sequence[i:i + k] for i in range(len(sequence) - k + 1)], probs)[0]
+
+def score_kmer(seq, pwm):
+    """Function to score a kmer with a pwm
+        kmer length is expected to be the same as pwm length
+
+    Args:
+        seq(str): kmer to score
+        pwm (numpy array): pwm for scoring
+
+    Yields:
+        score (float): PWM score for kmer
+    """
+    
+    # Initialize score to 0
+    score = 0
+    
+    if len(seq) != len(pwm[0]):
+        raise ValueError('K-mer and PWM are different lengths!')
+    
+    # Translator for DNA to numeric indices
+    dna_to_index = str.maketrans('ACGT', '0123')
+   
+    # Iterate across kmer and sum log likelihoods
+    for j, val in enumerate(list(seq.translate(dna_to_index)), 0):
+        score += pwm[int(val), j]
+
+    # Return score
+    return score
+
+"""
 def  GibbsMotifFinder(seqs, k, seed=42):
     # identify a common motif of length k that occurs once in each seq
     # use Gibbs sampling to iteratively improve guesses for the location of this motif across all sequences.
@@ -78,7 +147,7 @@ def  GibbsMotifFinder(seqs, k, seed=42):
         for i in range(4):
                 for j in range(len(pwm[0])):
                         pwm[i,j] = np.log2((pfm[i,j] + p) / (sums[j]+p*4)) - np.log2(bg)
-
+"""
 
     # Iteration:
         # 1. choose a sequence at random (from initial seq list)
