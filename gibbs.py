@@ -6,18 +6,36 @@ from seq_ops import get_seq, reverse_complement
 """
 GibbsMotifFinder(DNA, k-length)
     1. Randomly pick k-length subsequences from each DNA sequence as initial Motifs
+
     2. Repeat for a set number of iterations (e.g., 10,000) or until convergence:
+
         3. Randomly select one of the DNA sequences to leave out (DNA_i)
+           
         4. Construct a PWM from all Motifs except the one from the excluded sequence (Motif_i)
+            - Build a PWM using the current motifs excluding the motif from the randomly selected sequence.
+            - This allows for computing the expected pattern without bias from that sequence.
+
         5. Use the PWM to score all k-length subsequences in the excluded sequence (DNA_i)
-        6. Select a new position m for the motif in DNA_i **probabilistically**, based on the PWM scores
+            - For each k-mer in DNA_i, calculate a score using the PWM.
+            - Convert these scores into a probability distribution (higher-scoring k-mers have higher probability).
+
+        6. Select a new position m for the motif in DNA_i probabilistically, based on the PWM scores
+            - Choose a new k-mer from DNA_i based on the score distribution. 
+
         7. Update the motif for DNA_i with the new k-mer at position m
+            
     8. Return the final PFM (Position Frequency Matrix)
 
-also looking for promoter sequences? has CDS designation and TATA box, forward or reverse strand
+looking for promoter sequence; has CDS feature type and "AGGAGG" (S-D seq) present, forward or reverse strand
+    - if S-D in promoter and promoter has CDS, can be added to list of promoters (to be used for gibbs?)
+
 """
 
-def gibbs_motif_finder(DNA, k, max_iter=10000):
+
+""" need to figure out where/how to use score_kmer, score_sequence, get_seq, reverse_complement """
+
+
+def GibbsMotifFinder(DNA, k, max_iter=10000):
     N = len(DNA)  # Number of DNA sequences
     motifs = [random_kmer(seq, k) for seq in DNA]  # Random initial motifs
 
@@ -52,7 +70,7 @@ def select_kmer_probabilistically(sequence, pwm, k):
         for pos, nucleotide in enumerate(kmer):
             score *= pwm[nuc_index[nucleotide], pos]  # Multiply probabilities
         scores.append(score)
-    
+
     # Normalize scores to get probabilities
     probs = [score / sum(scores) for score in scores]
     
