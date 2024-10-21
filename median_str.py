@@ -14,11 +14,25 @@ def hamming_distance(s1, s2):
     
 
 def total_distance(pattern, dna_list):
-    """Calculate the total distance between a pattern and a list of DNA sequences."""
-    # TODO: Implement the total distance calculation
-
-    # 
-    pass
+    """
+    Calculate the total distance between a pattern and a list of DNA sequences;
+       Find min Hamming distance for each sequence and add that dist to total
+    """
+    
+    total_dist = 0 
+    for seq in dna_list:
+        min_dist = 10000 # initialize min_dist to large number
+        # Iterate over all possible k-mers in the sequence
+        for i in range(len(seq) - len(pattern) + 1):
+            kmer = seq[i:i + len(pattern)]  # extract k-mer of len(pattern)
+            dist = hamming_distance(pattern, kmer)  # get Hamming distance for this kmer
+            # Update minimum distance for currrent sequence
+            if dist < min_dist:
+                min_dist = dist
+        # Add minimum distance to total distance
+        total_dist += min_dist
+    
+    return total_dist  # Return the cumulative distance
 
 
 def branch_and_bound(prefix, k, dna_list, best_distance):
