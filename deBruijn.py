@@ -64,7 +64,7 @@ class DeBruijnGraph():
         self.nodes[left].add_neighbor(right)
         self.graph[left].append(right)
 
-        pass
+        return self.graph
 
     def remove_edge(self, left, right):
         ''' This function removes an edge from the graph
@@ -84,7 +84,7 @@ class DeBruijnGraph():
 
         self.nodes[left].remove_neighbor(right)
 
-        pass
+        return self.graph
 
         
     def build_debruijn_graph(self, input_string, k):
@@ -138,7 +138,7 @@ class DeBruijnGraph():
 
         """
         
-        pass
+        return self.graph
 
 
 
