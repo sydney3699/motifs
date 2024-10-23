@@ -31,20 +31,17 @@ looking for promoter sequence; has CDS feature type and "AGGAGG" (S-D seq) prese
 
 """
 
-
-""" need to figure out where/how to use score_kmer, score_sequence, get_seq, reverse_complement """
-
-
 def GibbsMotifFinder(DNA, k, max_iter=10000):
     N = len(DNA)  # Number of DNA sequences
     motifs = [random_kmer(seq, k) for seq in DNA]  # Random initial motifs
 
     for _ in range(max_iter):
         i = random.randint(0, N - 1)  # Randomly select one sequence
-        excluded_motifs = [motif for j, motif in enumerate(motifs) if j != i]
-        
+        removed_seq = DNA[i]
+        included_seqs = [motif for j, motif in enumerate(motifs) if j != i]
+        # sequences = [DNA[j][lsi[j]:lsi[j] + k] for j in range(len(DNA)) if j != i]
         # Build PWM from motifs except the one in sequence i
-        pwm = build_pwm(excluded_motifs, k)
+        pwm = build_pwm(included_seqs, k)
         
         # Select a new motif probabilistically for sequence i
         new_motif = select_kmer_probabilistically(DNA[i], pwm, k)
